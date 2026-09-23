@@ -30,25 +30,18 @@
   .title small{display:block;font-size:12px;font-weight:400;color:var(--dim);letter-spacing:0}
   .gear{margin-left:auto;font-size:19px;color:var(--dim);cursor:pointer;padding:6px}
 
-  /* 视图切换 */
   .tabs{display:flex;gap:6px;background:#f3e9dc;border-radius:12px;padding:4px;margin-bottom:14px}
-  .tab{
-    flex:1;text-align:center;font-size:14px;font-weight:600;color:var(--dim);
-    padding:8px 0;border-radius:9px;cursor:pointer;transition:all .15s;
-  }
+  .tab{flex:1;text-align:center;font-size:14px;font-weight:600;color:var(--dim);
+       padding:8px 0;border-radius:9px;cursor:pointer;transition:all .15s}
   .tab.on{background:#fff;color:var(--warm);box-shadow:0 1px 4px rgba(180,150,110,.12)}
 
   .composer{background:var(--card);border:1.5px solid var(--line);border-radius:18px;padding:14px;box-shadow:0 2px 10px rgba(180,150,110,.06)}
-  textarea{
-    width:100%;border:0;outline:0;resize:none;font-family:inherit;font-size:15.5px;
-    color:var(--ink);background:transparent;line-height:1.6;min-height:56px;padding:2px 0;
-  }
+  textarea{width:100%;border:0;outline:0;resize:none;font-family:inherit;font-size:15.5px;
+           color:var(--ink);background:transparent;line-height:1.6;min-height:56px;padding:2px 0}
   textarea::placeholder{color:#c4b6a4}
   .btns{display:flex;gap:8px;margin-top:10px}
-  .btn{
-    flex:1;border:0;border-radius:12px;padding:11px 8px;font-family:inherit;font-size:14.5px;
-    font-weight:600;cursor:pointer;transition:transform .12s,opacity .15s;
-  }
+  .btn{flex:1;border:0;border-radius:12px;padding:11px 8px;font-family:inherit;font-size:14.5px;
+       font-weight:600;cursor:pointer;transition:transform .12s,opacity .15s}
   .btn:active{transform:scale(.97)}
   .btn[disabled]{opacity:.45;pointer-events:none}
   .btn-a{background:var(--warm);color:#fff}
@@ -57,106 +50,99 @@
   .chip{font-size:12.5px;color:var(--dim);background:#f5ece0;border-radius:20px;padding:5px 11px;cursor:pointer}
   .chip:active{background:#eee0cf}
 
-  .sect{margin-top:26px}
+  .sect{margin-top:24px}
   .sect h2{font-size:13px;font-weight:700;color:var(--dim);letter-spacing:1px;margin:0 0 10px 4px}
   .sect h2 span{font-weight:400;letter-spacing:0}
 
-  .task{
-    display:flex;gap:12px;align-items:flex-start;background:var(--card);
-    border:1.5px solid var(--line);border-radius:15px;padding:13px 14px;margin-bottom:9px;
-    transition:background .18s,border-color .18s,transform .12s;
+  /* ---------- 事件池 ---------- */
+  .pool{background:var(--card);border:1.5px solid var(--line);border-radius:16px;padding:13px 13px 10px}
+  .pgroup{margin-bottom:10px}
+  .pgroup:last-of-type{margin-bottom:4px}
+  .pglbl{font-size:11px;color:#bcae9c;letter-spacing:1px;margin:0 0 5px 2px}
+  .pchips{display:flex;flex-wrap:wrap;gap:6px}
+  .ec{
+    display:inline-flex;align-items:center;gap:4px;font-size:13px;font-weight:600;
+    border-radius:10px;padding:6px 10px;cursor:pointer;border:1.5px solid transparent;
+    background:var(--c-bg);color:var(--c-fg);transition:transform .12s,box-shadow .15s;
   }
-  .task:active{transform:scale(.99)}
-  .task .box{
-    flex:none;width:22px;height:22px;margin-top:1px;border:2px solid #d8c9b6;border-radius:8px;
-    position:relative;cursor:pointer;transition:all .16s;
+  .ec:active{transform:scale(.95)}
+  .ec.on{box-shadow:0 0 0 2.5px var(--warm);transform:scale(1.04)}
+  .ec .em{font-size:14px;line-height:1}
+  .ec.add{background:#f5ece0;color:var(--dim);font-weight:400}
+  .poolhint{font-size:11.5px;color:#bcae9c;text-align:center;margin-top:8px;line-height:1.5}
+
+  /* ---------- 24 格 ---------- */
+  .grid{background:var(--card);border:1.5px solid var(--line);border-radius:16px;padding:10px 12px;overflow:hidden}
+  .hr{display:flex;align-items:stretch;gap:9px;padding:2px 0}
+  .hlbl{
+    width:34px;flex:none;font-size:11.5px;color:#bcae9c;font-variant-numeric:tabular-nums;
+    display:flex;align-items:center;justify-content:flex-end;padding-right:2px;
   }
-  .task .box::after{
-    content:"";position:absolute;left:6.5px;top:2.5px;width:5px;height:10px;
+  .hr.now .hlbl{color:var(--now);font-weight:700}
+  .hcell{
+    flex:1;min-width:0;height:38px;border-radius:9px;border:1.5px dashed #ece2d4;
+    display:flex;align-items:center;padding:0 11px;cursor:pointer;
+    transition:background .15s,border-color .15s,transform .1s;
+  }
+  .hcell:active{transform:scale(.99)}
+  .hcell.empty::after{content:"＋";color:#ded2c2;font-size:14px}
+  .hcell[data-c]{border-style:solid;border-color:transparent}
+  .hcell .txt{font-size:13.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;
+              white-space:nowrap;display:flex;align-items:center;gap:5px}
+  .hr.now .hcell{box-shadow:inset 0 0 0 1.5px var(--now)}
+  .gridfoot{display:flex;align-items:center;gap:10px;margin-top:10px;padding-top:10px;border-top:1px solid #f5ece0}
+  .gridfoot .cnt{font-size:12px;color:var(--dim)}
+  .gridfoot .btn{flex:none;padding:7px 13px;font-size:12.5px;background:#f5ece0;color:#8a7a66}
+
+  /* 分类配色 */
+  [data-c=night]{--c-bg:#eceefa;--c-fg:#6b78a6}
+  [data-c=meal] {--c-bg:#fdf1e0;--c-fg:#b5783a}
+  [data-c=body] {--c-bg:#e9f4ec;--c-fg:#4c8a63}
+  [data-c=study]{--c-bg:#e9f1fa;--c-fg:#4a7bb0}
+  [data-c=job]  {--c-bg:#fdeceb;--c-fg:#b8564f}
+  [data-c=life] {--c-bg:#f3ecfa;--c-fg:#7a64aa}
+
+  .task{display:flex;gap:12px;align-items:flex-start;background:var(--card);
+        border:1.5px solid var(--line);border-radius:15px;padding:13px 14px;margin-bottom:9px}
+  .task .box{flex:none;width:22px;height:22px;margin-top:1px;border:2px solid #d8c9b6;
+             border-radius:8px;position:relative;cursor:pointer;transition:all .16s}
+  .task .box::after{content:"";position:absolute;left:6.5px;top:2.5px;width:5px;height:10px;
     border:solid #fff;border-width:0 2.5px 2.5px 0;transform:rotate(45deg) scale(0);
-    transition:transform .2s cubic-bezier(.4,1.7,.6,1);
-  }
+    transition:transform .2s cubic-bezier(.4,1.7,.6,1)}
   .task.on{background:var(--green-soft);border-color:#cfe6d7}
   .task.on .box{background:var(--green);border-color:var(--green)}
   .task.on .box::after{transform:rotate(45deg) scale(1)}
   .t-body{flex:1;min-width:0}
   .t-title{font-size:15px;word-break:break-word}
   .task.on .t-title{color:#84a892;text-decoration:line-through;text-decoration-color:#bcd8c5}
-  .t-meta{font-size:12.5px;color:var(--dim);margin-top:3px;display:flex;gap:8px;flex-wrap:wrap}
+  .t-meta{font-size:12.5px;color:var(--dim);margin-top:3px}
   .t-due{color:var(--warm);font-weight:600}
   .t-due.late{color:#d05a5a}
   .t-note{font-size:12.5px;color:var(--dim);margin-top:4px;line-height:1.55}
   .del{flex:none;color:#d5c8b8;font-size:17px;cursor:pointer;padding:0 2px;line-height:1.2}
-
   .step{background:var(--blue-soft);border-color:#d8e5f2}
   .step .box{border-color:#a9c3dd}
   .step.on{background:var(--green-soft);border-color:#cfe6d7}
-
   .empty{color:#c4b6a4;font-size:14px;text-align:center;padding:26px 0}
 
-  /* ---------- 时间轴 ---------- */
-  .tl{display:flex;gap:8px;background:var(--card);border:1.5px solid var(--line);
-      border-radius:16px;padding:14px 12px 14px 0;overflow:hidden}
-  .tl-gutter{width:52px;flex:none;position:relative}
-  .tl-track{flex:1;position:relative;border-left:1.5px solid #eaded0;min-width:0}
-  .tl-hr{position:absolute;left:0;right:0;border-top:1px dashed #f2e9dd}
-  .tl-hr.half{border-top-style:dotted;border-color:#f7f1e8}
-  .tl-lbl{position:absolute;right:8px;transform:translateY(-50%);font-size:11px;color:#bcae9c;font-variant-numeric:tabular-nums}
-  .blk{
-    position:absolute;left:3px;border-radius:10px;padding:5px 9px;overflow:hidden;
-    background:var(--warm-soft);border-left:3px solid var(--warm);cursor:pointer;
-    transition:opacity .15s,transform .12s;
-  }
-  .blk:active{transform:scale(.985)}
-  .blk .bt{font-size:13px;font-weight:600;color:#a9663a;line-height:1.35;
-           overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .blk .bs{font-size:10.5px;color:#c09472;font-variant-numeric:tabular-nums;line-height:1.4}
-  .blk.tiny{padding:1px 8px;border-radius:7px}
-  .blk.tiny .bt{font-size:12px;line-height:1.3}
-  /* 睡觉带：压在任务底下；任务盖上去 = 熬夜了 */
-  .blk.night{background:#eceefa;border-left-color:#98a2c6}
-  .blk.night .bt{color:#6f7ba4} .blk.night .bs{color:#9ba4c2}
-  .blk.night.slept{background:#e9f2ec;border-left-color:var(--green)}
-  .blk.night.slept .bt{color:#5b8f70} .blk.night.slept .bs{color:#93b8a1}
-  .blk.pin{background:#fff5f0;border-left-style:dashed;padding-top:3px;padding-bottom:3px}
-  .blk.blue{background:var(--blue-soft);border-left-color:var(--blue)}
-  .blk.blue .bt{color:#4a7bb0} .blk.blue .bs{color:#8aabcd}
-  .blk.on{background:var(--green-soft);border-left-color:var(--green);opacity:.72}
-  .blk.on .bt{color:#5d8f70;text-decoration:line-through;text-decoration-color:#b9d6c3}
-  .blk.on .bs{color:#93b8a1}
-  .tl-now{position:absolute;left:-4px;right:0;height:0;border-top:2px solid var(--now);z-index:5}
-  .tl-now::before{content:"";position:absolute;left:-4px;top:-4px;width:7px;height:7px;
-                  border-radius:50%;background:var(--now)}
-
-  .importbar{margin:14px 0 4px;display:flex;gap:8px;align-items:center}
-  .importbar .btn{flex:none;padding:8px 14px;font-size:13px;background:#f3e9dc;color:#8a7a66}
-  .importbar .hint{font-size:12px;color:#bcae9c;line-height:1.5}
-
-  .toast{
-    position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 26px);transform:translate(-50%,20px);
+  .toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 26px);transform:translate(-50%,20px);
     background:#3b3229;color:#fff;font-size:14px;padding:11px 20px;border-radius:24px;
-    opacity:0;pointer-events:none;transition:all .25s;max-width:88vw;text-align:center;z-index:99;
-  }
+    opacity:0;pointer-events:none;transition:all .25s;max-width:88vw;text-align:center;z-index:99}
   .toast.show{opacity:1;transform:translate(-50%,0)}
 
   .sheet{position:fixed;inset:0;background:rgba(59,50,41,.35);display:none;z-index:100;align-items:flex-end}
   .sheet.show{display:flex}
-  .sheet-in{
-    background:var(--bg);width:100%;max-width:560px;margin:0 auto;border-radius:22px 22px 0 0;
-    padding:22px 20px calc(env(safe-area-inset-bottom) + 24px);
-  }
+  .sheet-in{background:var(--bg);width:100%;max-width:560px;margin:0 auto;border-radius:22px 22px 0 0;
+            padding:22px 20px calc(env(safe-area-inset-bottom) + 24px)}
   .sheet-in h3{margin:0 0 4px;font-size:16px}
   .sheet-in p{font-size:13px;color:var(--dim);margin:0 0 14px;line-height:1.7}
-  input[type=password],input[type=text].f{
-    width:100%;padding:12px 14px;font-size:15px;font-family:inherit;border:1.5px solid var(--line);
-    border-radius:12px;background:#fff;color:var(--ink);outline:none;
-  }
-  input[type=password]:focus{border-color:var(--warm)}
+  input[type=password],input[type=text].f{width:100%;padding:12px 14px;font-size:15px;font-family:inherit;
+    border:1.5px solid var(--line);border-radius:12px;background:#fff;color:var(--ink);outline:none}
+  input[type=password]:focus,input[type=text].f:focus{border-color:var(--warm)}
   .sheet-in .btn{margin-top:14px;width:100%}
-
   .loading{display:inline-block;animation:spin 1s linear infinite}
   @keyframes spin{to{transform:rotate(360deg)}}
-  @keyframes pop{0%{transform:scale(1)}45%{transform:scale(1.03)}100%{transform:scale(1)}}
+  @keyframes pop{0%{transform:scale(1)}45%{transform:scale(1.035)}100%{transform:scale(1)}}
   .pop{animation:pop .35s ease}
 </style>
 </head>
@@ -170,8 +156,8 @@
   </header>
 
   <div class="tabs">
+    <div class="tab" data-view="grid">24 格</div>
     <div class="tab on" data-view="list">列表</div>
-    <div class="tab" data-view="axis">日程轴</div>
   </div>
 
   <div class="composer">
@@ -202,39 +188,46 @@
 </div>
 
 <script>
-const KEY_STORE = "duoduo-v2";
+const KEY_STORE = "duoduo-v3";
 
-/* 明神的每日时间表
-   ⚠️ 2026-09-23 明神口述校正，已与 生活秩序方案-v1.md 不同：
-      健身是 7:00–9:00（不是文档里的 6:30–8:30），早餐在 6–7 点（不是健身后），
-      洗澡并进健身那 2 小时里。改这块之前先问明神，别照旧文档抄。 */
-const SCHED_VER = 2;
-const SCHEDULE = [
-  ["起床 · 喝水 · 早餐",      "06:00", "07:00", "先一大杯温水 + 早餐吃饱；起床后不碰手机"],
-  ["健身（含洗澡）",          "07:00", "09:00", "往返 + 热身 + 力量训练 + 少量有氧 + 回家洗澡，都在里面"],
-  ["晨学 2h（编程）",         "09:00", "11:00", "精力最好的时段给最难的科目"],
-  ["午饭 + 午休",             "11:00", "13:00", "自己做饭 + 午睡 20–30 分钟"],
-  ["下午学习块 1",            "13:00", "15:30", "英语或编程"],
-  ["休息 · 起身走动",         "15:30", "15:45", "起来喝水、远眺"],
-  ["下午学习块 2",            "15:45", "18:15", "英语或编程"],
-  ["晚饭 + 放松",             "18:15", "20:15", "可以听播客；饭后先把洗漱完成"],
-  ["看书 1h（《当下的力量》）", "20:15", "21:15", "固定时间，雷打不动"],
-  ["每日复盘 · 打勾",         "21:15", "21:30", "打卡 + 心情分 + 一件好事"],
-  ["睡前阅读 30 分钟",        "21:30", "22:00", "纸质书 / Kindle，不用手机"],
+/* ============ 事件池：明神能做的事 ============
+   这些是从明神手上的材料整理出来的（英语 / AI Agent / 简历面试 /
+   短线交易 / 唱歌 / 健身 / 编程）。要加要减，直接改这里。 */
+const GROUPS = [
+  { k:"night", g:"睡觉休息", items:[
+    ["sleep","😴","睡觉"], ["nap","🛏️","午休"], ["rest","☕","歇一会儿"],
+  ]},
+  { k:"meal", g:"吃喝洗漱", items:[
+    ["bfast","🍳","早餐"], ["lunch","🍚","午饭"], ["dinner","🍜","晚饭"], ["wash","🚿","洗漱"],
+  ]},
+  { k:"body", g:"身体", items:[
+    ["gym","🏋️","健身"], ["cardio","🏃","有氧 / 散步"], ["stretch","🧘","拉伸"],
+  ]},
+  { k:"study", g:"学习", items:[
+    ["code","💻","编程"], ["eng","🔤","英语"], ["agent","🤖","AI Agent"], ["course","📘","AI 课程"],
+  ]},
+  { k:"job", g:"求职", items:[
+    ["cv","📄","改简历"], ["apply","📮","投简历"], ["qa","🎤","刷面试题"], ["mock","🗣️","模拟面试"],
+  ]},
+  { k:"life", g:"自己", items:[
+    ["read","📖","看书"], ["sing","🎵","唱歌"], ["trade","📈","短线交易"],
+    ["chore","🧹","家务"], ["fun","🎮","放松"], ["review","✅","复盘打卡"],
+  ]},
 ];
+const EV = {};
+GROUPS.forEach(gr => gr.items.forEach(([id, em, t]) => EV[id] = { id, em, t, c: gr.k }));
 
 let S = load();
 let view = "list";
+let brush = null;          // 当前选中的贴纸
 
 function load() {
   let s = {};
   try { s = JSON.parse(localStorage.getItem(KEY_STORE)) || {}; } catch (e) {}
-  const tasks = s.tasks || [];
-  // 从 v1 迁过来：老的只有 due，补成 start
-  tasks.forEach(t => { if (t.due && !t.start) { t.start = t.due; t.end = t.end || ""; } });
-  return { tasks, apiKey: s.apiKey || "", steps: s.steps || [],
-           importedOn: s.importedOn || "", importedVer: s.importedVer || 0,
-           sleep: s.sleep || {} };
+  return {
+    tasks: s.tasks || [], steps: s.steps || [], apiKey: s.apiKey || "",
+    grid: s.grid || {}, custom: s.custom || [],
+  };
 }
 function save() { try { localStorage.setItem(KEY_STORE, JSON.stringify(S)); } catch (e) {} }
 
@@ -243,6 +236,7 @@ const pad = n => String(n).padStart(2, "0");
 const ymd = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
 const todayStr = () => ymd(new Date());
 const hhmm = d => `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+const todayGrid = () => (S.grid[todayStr()] = S.grid[todayStr()] || {});
 
 function fmtWhen(t) {
   const s = t.start && new Date(t.start);
@@ -295,14 +289,14 @@ const SYS_TASK = `你是日程解析助手。把用户的一句话解析成结�
 {"tasks":[{"title":"标题","start":"YYYY-MM-DDTHH:mm","end":"YYYY-MM-DDTHH:mm","note":"补充说明或空字符串"}]}
 
 规则：
-- 用户说了**时间段**（「9点到11点」「上午9-11点」「下午2-4点」）→ start 和 end 都要填
-- 只说了**时间点**（「下午3点开会」「今晚10点前洗澡」）→ 只填 start，end 填空字符串 ""
+- 用户说了**时间段**（「9点到11点」「上午9-11点」）→ start 和 end 都要填
+- 只说了**时间点**（「下午3点开会」）→ 只填 start，end 填空字符串 ""
 - 时间换算成绝对时间：今天/明天/后天/周X 都要算成具体日期
 - 只说了日期没说钟点 → start 用 09:00；只说了「晚上」→ 20:00
 - 完全没提时间 → start 和 end 都填空字符串 ""
 - 一句话里有多件事就拆成多个 task
 - title 精简到 15 字以内，去掉时间词
-- end 必须晚于 start；不确定时长就别填 end
+- end 必须晚于 start
 - 不要问用户问题，直接给结果`;
 
 const SYS_SPLIT = `用户想做一件大事，但动不了。你的工作是把这件事砸成小石子。
@@ -322,14 +316,74 @@ const SYS_SPLIT = `用户想做一件大事，但动不了。你的工作是把�
 function render(popId) {
   document.getElementById("today").textContent =
     new Date().toLocaleDateString("zh-CN", { month: "long", day: "numeric", weekday: "long" });
-
-  if (view === "axis") renderAxis(popId);
-  else renderList(popId);
-
+  if (view === "grid") renderGrid();
+  else renderList();
   if (popId) {
     const el = document.querySelector(`[data-id="${popId}"]`);
     if (el) el.classList.add("pop");
   }
+}
+
+/* ---------- 24 格 ---------- */
+function allEvents() {
+  const out = {};
+  Object.assign(out, EV);
+  S.custom.forEach(c => out[c.id] = c);
+  return out;
+}
+
+function renderGrid() {
+  const evs = allEvents();
+  const g = todayGrid();
+  const curH = new Date().getHours();
+
+  let pool = "";
+  for (const gr of GROUPS) {
+    pool += `<div class="pgroup"><div class="pglbl">${gr.g}</div><div class="pchips">`
+         +  gr.items.map(([id, em, t]) =>
+              `<span class="ec ${brush === id ? "on" : ""}" data-c="${gr.k}" data-pick="${id}">
+                 <span class="em">${em}</span>${t}</span>`).join("")
+         +  `</div></div>`;
+  }
+  if (S.custom.length) {
+    pool += `<div class="pgroup"><div class="pglbl">我自己加的</div><div class="pchips">`
+         +  S.custom.map(c =>
+              `<span class="ec ${brush === c.id ? "on" : ""}" data-c="${c.c}" data-pick="${c.id}">
+                 <span class="em">${c.em}</span>${esc(c.t)}</span>`).join("")
+         +  `</div></div>`;
+  }
+  pool += `<div class="pchips"><span class="ec add" id="addEv">＋ 加一个</span></div>`;
+
+  let rows = "";
+  for (let h = 0; h < 24; h++) {
+    const id = g[h];
+    const ev = id ? evs[id] : null;
+    rows += `<div class="hr ${h === curH ? "now" : ""}">
+      <div class="hlbl">${pad(h)}</div>
+      <div class="hcell ${ev ? "" : "empty"}" data-h="${h}" ${ev ? `data-c="${ev.c}"` : ""}>
+        ${ev ? `<span class="txt"><span class="em">${ev.em}</span>${esc(ev.t)}</span>` : ""}
+      </div>
+    </div>`;
+  }
+
+  const used = Object.keys(g).filter(k => g[k]).length;
+
+  document.getElementById("lists").innerHTML =
+    `<div class="sect">
+       <h2>事件池 <span>· 点一个，再去下面点格子贴上去</span></h2>
+       <div class="pool">${pool}
+         <div class="poolhint">选中一个贴纸 → 点格子贴上（可以连着点好几格）<br>没选贴纸时，点已贴的格子 = 擦掉</div>
+       </div>
+     </div>
+     <div class="sect">
+       <h2>今天 24 格 <span>· 已排 ${used}/24</span></h2>
+       <div class="grid">${rows}
+         <div class="gridfoot">
+           <div class="cnt">${brush ? `正在贴：${evs[brush].em} ${evs[brush].t}` : "还没选贴纸"}</div>
+           <button class="btn" id="clearGrid">清空今天</button>
+         </div>
+       </div>
+     </div>`;
 }
 
 function renderList() {
@@ -341,177 +395,20 @@ function renderList() {
   const stepsDone = S.steps.filter(s => s.done);
 
   let html = "";
-
   if (steps.length) {
     html += `<div class="sect"><h2>苏苏帮明神砸开的石子 <span>· 今天从第一步开始</span></h2>`
          +  steps.map(t => taskHTML(t, "step")).join("") + `</div>`;
   }
-
   html += `<div class="sect"><h2>今天</h2>`
        +  (today.length ? today.map(t => taskHTML(t)).join("") : `<div class="empty">今天还没有安排喵</div>`)
        +  `</div>`;
-
   if (later.length) html += `<div class="sect"><h2>以后</h2>` + later.map(t => taskHTML(t)).join("") + `</div>`;
-
   const allDone = done.concat(stepsDone);
   if (allDone.length) {
     html += `<div class="sect"><h2>已完成 <span>· ${allDone.length} 件</span></h2>`
          +  allDone.slice(-12).reverse().map(t => taskHTML(t)).join("") + `</div>`;
   }
-
   document.getElementById("lists").innerHTML = html;
-}
-
-/* ---------- 日程轴 ---------- */
-const HOUR_PX = 48;          // 24 小时 × 48 = 1152px，手机上正好滚
-const DAY_MIN = 1440;
-const AWAKE_LO = 6 * 60, AWAKE_HI = 22 * 60;
-// 睡觉横跨午夜，所以在 24 小时轴上被切成两段，但它们是**同一觉**
-const SLEEP_BANDS = [[0, AWAKE_LO], [AWAKE_HI, DAY_MIN]];
-const m2s = m => m >= DAY_MIN ? "24:00" : `${pad(Math.floor(m / 60))}:${pad(m % 60)}`;
-
-function renderAxis() {
-  const dayStart = new Date(); dayStart.setHours(0, 0, 0, 0);
-  const dayEnd = new Date(dayStart.getTime() + 864e5);
-
-  // 跟今天有交集的任务都算（含昨夜跨过来的），再裁到今天窗口里
-  const blocks = [];
-  for (const t of S.tasks) {
-    if (!t.start) continue;
-    const s = new Date(t.start);
-    const e = t.end ? new Date(t.end) : new Date(s.getTime() + 30 * 60000);
-    if (!(s < dayEnd && e > dayStart)) continue;
-    const sm = Math.max(0, (s - dayStart) / 60000);
-    const em = Math.min(DAY_MIN, (e - dayStart) / 60000);
-    if (em <= sm) continue;
-    blocks.push({ t, sm, em, pin: !t.end });
-  }
-
-  layout(blocks);
-
-  const H = DAY_MIN / 60 * HOUR_PX;
-  const y = m => m / 60 * HOUR_PX;
-
-  let gutter = "", lines = "", blks = "";
-  for (let m = 0; m <= DAY_MIN; m += 60) {
-    gutter += `<div class="tl-lbl" style="top:${y(m)}px">${m2s(m)}</div>`;
-    if (m > 0) lines += `<div class="tl-hr" style="top:${y(m)}px"></div>`;
-    if (m + 30 < DAY_MIN) lines += `<div class="tl-hr half" style="top:${y(m + 30)}px"></div>`;
-  }
-
-  // 睡觉带：压在任务底下（z-index 1），任务盖上去就是「熬夜了」
-  const slept = !!S.sleep[todayStr()];
-  for (const [a, b] of SLEEP_BANDS) {
-    blks += `<div class="blk night ${slept ? "slept" : ""}" data-act="sleep"
-        style="top:${y(a)}px;height:${y(b) - y(a) - 3}px;left:3px;width:calc(100% - 9px);z-index:1">
-      <div class="bt">🌙 睡觉</div>
-      <div class="bs">${m2s(a)} – ${m2s(b)}${slept ? "　✓ 护住了" : ""}</div>
-    </div>`;
-  }
-
-  for (const b of blocks) {
-    const w = 100 / b.cols;
-    const left = b.col * w;
-    const top = y(b.sm), hgt = Math.max(y(b.em) - y(b.sm) - 3, 22);
-    const tiny = hgt < 32;
-    // 矮块 z-index 更高：不然短时段（15 分钟那种）会被下一块盖住，字都看不见
-    blks += `<div class="blk ${b.t.done ? "on" : ""} ${b.pin ? "pin" : ""} ${b.cls || ""} ${tiny ? "tiny" : ""}"
-        data-id="${b.t.id}"
-        style="top:${top}px;height:${hgt}px;z-index:${Math.round(300 - hgt)};left:calc(3px + ${left}% - ${left * 0.03}px);width:calc(${w}% - 9px)">
-      <div class="bt">${esc(b.t.title)}</div>
-      ${hgt > 34 ? `<div class="bs">${hhmm(new Date(b.t.start))}${b.t.end ? "–" + hhmm(new Date(b.t.end)) : ""}</div>` : ""}
-    </div>`;
-  }
-
-  const now = new Date();
-  const nm = now.getHours() * 60 + now.getMinutes();
-  const nowLine = `<div class="tl-now" style="top:${y(nm)}px"></div>`;
-
-  // 空档只算醒着的 16 小时，睡觉不算「空着」
-  const free = freeGaps(blocks, AWAKE_LO, AWAKE_HI);
-
-  document.getElementById("lists").innerHTML =
-    `<div class="sect"><h2>今天的日程轴 <span>· 睡 8h｜${fmtFree(free)}</span></h2>
-      <div class="tl">
-        <div class="tl-gutter">${gutter}</div>
-        <div class="tl-track" style="height:${H}px">${lines}${blks}${nowLine}</div>
-      </div>
-      <div class="hint" style="text-align:center;margin-top:10px">
-        点夜块 = 「这一觉护住了」${slept ? "（今天已标 ✓）" : ""}
-      </div>
-    </div>` + importBar();
-}
-
-/* 重叠块分栏：把互相重叠的块排进不同的列 */
-function layout(blocks) {
-  blocks.sort((a, b) => a.sm - b.sm || a.em - b.em);
-  let cluster = [], colEnds = [], clusterEnd = -1;
-  const flush = () => {
-    const n = Math.max(...cluster.map(b => b.col)) + 1;
-    cluster.forEach(b => b.cols = n);
-    cluster = []; colEnds = [];
-  };
-  for (const b of blocks) {
-    if (cluster.length && b.sm >= clusterEnd) flush();
-    let c = colEnds.findIndex(e => e <= b.sm);
-    if (c === -1) { colEnds.push(b.em); c = colEnds.length - 1; }
-    else colEnds[c] = b.em;
-    b.col = c;
-    cluster.push(b);
-    clusterEnd = cluster.length === 1 ? b.em : Math.max(clusterEnd, b.em);
-  }
-  if (cluster.length) flush();
-  return blocks;
-}
-
-/* 算空档（≥30 分钟） */
-function freeGaps(blocks, lo, hi) {
-  const busy = blocks.map(b => [b.sm, b.em]).sort((a, b) => a[0] - b[0]);
-  const gaps = []; let cur = lo;
-  for (const [s, e] of busy) {
-    if (s - cur >= 30) gaps.push([cur, s]);
-    cur = Math.max(cur, e);
-  }
-  if (hi - cur >= 30) gaps.push([cur, hi]);
-  return gaps;
-}
-function fmtFree(gaps) {
-  if (!gaps.length) return "排满了，没有空档";
-  const total = gaps.reduce((a, [s, e]) => a + (e - s), 0);
-  const fmt = m => `${pad(Math.floor(m / 60))}:${pad(m % 60)}`;
-  const list = gaps.slice(0, 3).map(([s, e]) => `${fmt(s)}–${fmt(e)}`).join("、");
-  return `空档 ${(total / 60).toFixed(1)}h${gaps.length > 3 ? " 等" : "：" + list}`;
-}
-
-function importBar() {
-  const sameDay = S.importedOn === todayStr();
-  const stale = sameDay && S.importedVer !== SCHED_VER;   // 作息改过了，允许重铺
-  const btn = (!sameDay || stale)
-    ? `<button class="btn" id="importSched">${stale ? "重新导入（作息已改）" : "导入每日时间表"}</button>`
-    : `<button class="btn" id="importSched" disabled>✓ 今天已导入</button>`;
-  const hint = stale ? "苏苏更新了作息，重铺一次会替换掉旧的"
-             : sameDay ? "要重来就先删掉轴上的块"
-             : "把明神 6:00–22:00 的计划铺到轴上";
-  return `<div class="importbar">${btn}<div class="hint">${hint}</div></div>`;
-}
-
-function doImport() {
-  const d = todayStr();
-  const sameDay = S.importedOn === d;
-  const stale = sameDay && S.importedVer !== SCHED_VER;
-  if (sameDay && !stale) { toast("今天已经导入过了喵"); return; }
-
-  // 重铺时先清掉上次导入的（只删带 sched 标记、且属于今天的，不动明神自己建的）
-  if (stale) S.tasks = S.tasks.filter(t => !(t.sched && t.start && t.start.startsWith(d)));
-
-  const mk = (title, s, e, note) => ({
-    id: uid(), title, start: `${d}T${s}`, end: `${d}T${e}`,
-    note: note || "", done: false, createdAt: Date.now(), cls: "blue", sched: true,
-  });
-  SCHEDULE.forEach(([title, s, e, note]) => S.tasks.push(mk(title, s, e, note)));
-  S.importedOn = d; S.importedVer = SCHED_VER;
-  save(); render();
-  toast(`铺好了 ${SCHEDULE.length} 块 ✓`);
 }
 
 function taskHTML(t, cls = "") {
@@ -536,32 +433,55 @@ function esc(s) {
 
 /* ---------- 交互 ---------- */
 document.getElementById("lists").addEventListener("click", e => {
-  if (e.target.id === "importSched") { doImport(); return; }
-
-  // 点夜块 = 这一觉护住了
-  if (e.target.closest('[data-act="sleep"]')) {
-    const k = todayStr();
-    S.sleep[k] = !S.sleep[k];
-    save(); render();
-    toast(S.sleep[k] ? "✓ 这一觉护住了" : "已取消");
+  // 事件池：选贴纸
+  const pick = e.target.closest("[data-pick]");
+  if (pick) {
+    const id = pick.dataset.pick;
+    brush = (brush === id) ? null : id;
+    renderGrid();
+    return;
+  }
+  if (e.target.id === "addEv") {
+    const name = prompt("加一个你自己要做的事（名字）");
+    if (name && name.trim()) {
+      const em = prompt("配个 emoji（可留空）", "⭐") || "⭐";
+      S.custom.push({ id: "c" + uid(), em: em.trim().slice(0, 2) || "⭐", t: name.trim().slice(0, 8), c: "life" });
+      save(); renderGrid();
+    }
+    return;
+  }
+  if (e.target.id === "clearGrid") {
+    if (!confirm("清空今天的 24 格？（事件池不受影响）")) return;
+    S.grid[todayStr()] = {};
+    save(); renderGrid();
     return;
   }
 
-  const host = e.target.closest(".task, .blk");
+  // 24 格：贴 / 擦
+  const cell = e.target.closest(".hcell");
+  if (cell) {
+    const h = cell.dataset.h;
+    const g = todayGrid();
+    if (brush) {
+      g[h] = brush;
+      save(); renderGrid();
+    } else if (g[h]) {
+      delete g[h];
+      save(); renderGrid();
+    } else {
+      toast("先从上面事件池选一个贴纸喵");
+    }
+    return;
+  }
+
+  // 列表视图
+  const host = e.target.closest(".task");
   if (!host) return;
   const id = host.dataset.id;
   const inSteps = !!host.closest(".sect")?.querySelector("h2")?.textContent.includes("石子");
   const arr = inSteps ? S.steps : S.tasks;
   const t = arr.find(x => x.id === id);
   if (!t) return;
-
-  if (view === "axis" || e.target.classList.contains("blk")) {
-    t.done = !t.done; t.doneAt = t.done ? Date.now() : null;
-    save(); render(t.done ? id : null);
-    if (t.done) toast("✓ 搞定一件");
-    return;
-  }
-
   const act = e.target.dataset.act;
   if (act === "toggle") {
     t.done = !t.done; t.doneAt = t.done ? Date.now() : null;
@@ -588,7 +508,7 @@ document.getElementById("inp").addEventListener("keydown", e => {
   if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) { e.preventDefault(); run("task"); }
 });
 
-document.querySelectorAll(".chip").forEach(c =>
+document.querySelectorAll(".chips .chip").forEach(c =>
   c.addEventListener("click", () => {
     document.getElementById("inp").value = c.textContent;
     document.getElementById("inp").focus();
@@ -609,12 +529,11 @@ async function run(mode) {
       const items = (out.tasks || []).filter(t => t && t.title);
       if (!items.length) throw new Error("没解析出日程，换个说法试试喵");
       items.forEach(t => {
-        let s = t.start || "", e = t.end || "";
-        if (e && s && new Date(e) <= new Date(s)) e = "";
+        let s = t.start || "", e2 = t.end || "";
+        if (e2 && s && new Date(e2) <= new Date(s)) e2 = "";
         S.tasks.push({
-          id: uid(), title: String(t.title).slice(0, 60),
-          start: s, end: e, note: String(t.note || "").slice(0, 120),
-          done: false, createdAt: Date.now(),
+          id: uid(), title: String(t.title).slice(0, 60), start: s, end: e2,
+          note: String(t.note || "").slice(0, 120), done: false, createdAt: Date.now(),
         });
       });
       save(); render(); inp.value = "";
