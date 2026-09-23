@@ -101,6 +101,7 @@
   [data-c=study]{--c-bg:#e9f1fa;--c-fg:#4a7bb0}
   [data-c=job]  {--c-bg:#fdeceb;--c-fg:#b8564f}
   [data-c=life] {--c-bg:#f3ecfa;--c-fg:#7a64aa}
+  [data-c=honest]{--c-bg:#f1efeb;--c-fg:#7d766c}
 
   .task{display:flex;gap:12px;align-items:flex-start;background:var(--card);
         border:1.5px solid var(--line);border-radius:15px;padding:13px 14px;margin-bottom:9px}
@@ -156,7 +157,7 @@
   </header>
 
   <div class="tabs">
-    <div class="tab" data-view="grid">24 格</div>
+    <div class="tab" data-view="grid">时间轴</div>
     <div class="tab on" data-view="list">列表</div>
   </div>
 
@@ -352,12 +353,18 @@ function renderGrid() {
                  <span class="em">${c.em}</span>${esc(c.t)}</span>`).join("")
          +  `</div></div>`;
   }
-  pool += `<div class="pchips"><span class="ec add" id="addEv">＋ 加一个</span></div>`;
+  pool += `<div class="pchips">
+    <span class="ec ${brush === "__write" ? "on" : ""}" data-c="honest" data-pick="__write"><span class="em">✏️</span>自己写</span>
+    <span class="ec add" id="addEv">＋ 加一个</span>
+  </div>`;
 
   let rows = "";
   for (let h = 0; h < 24; h++) {
     const id = g[h];
-    const ev = id ? evs[id] : null;
+    // 格子里可能是池子里的贴纸，也可能是手写的一行字（存成 "txt:..."）
+    const ev = !id ? null
+      : id.startsWith("txt:") ? { em: "✏️", t: id.slice(4), c: "honest" }
+      : evs[id];
     rows += `<div class="hr ${h === curH ? "now" : ""}">
       <div class="hlbl">${pad(h)}</div>
       <div class="hcell ${ev ? "" : "empty"}" data-h="${h}" ${ev ? `data-c="${ev.c}"` : ""}>
@@ -367,21 +374,32 @@ function renderGrid() {
   }
 
   const used = Object.keys(g).filter(k => g[k]).length;
+  const brushLabel = !brush ? "还没选"
+    : brush === "__write" ? "✏️ 自己写（点格子会弹输入框）"
+    : `${evs[brush].em} ${evs[brush].t}`;
 
   document.getElementById("lists").innerHTML =
     `<div class="sect">
-       <h2>事件池 <span>· 点一个，再去下面点格子贴上去</span></h2>
+       <h2>能做什么 <span>· 想不起来干嘛时，扫一眼这里</span></h2>
        <div class="pool">${pool}
-         <div class="poolhint">选中一个贴纸 → 点格子贴上（可以连着点好几格）<br>没选贴纸时，点已贴的格子 = 擦掉</div>
+         <div class="poolhint">
+           这只是个<b>菜单</b>，不是任务清单 —— 这里没有的事，照样能做<br>
+           选一个 → 点格子 → 就记上了（「✏️ 自己写」能随手打一行字）
+         </div>
        </div>
      </div>
      <div class="sect">
-       <h2>今天 24 格 <span>· 已排 ${used}/24</span></h2>
+       <h2>今天的时间轴 <span>· 记了 ${used}/24 小时</span></h2>
        <div class="grid">${rows}
          <div class="gridfoot">
-           <div class="cnt">${brush ? `正在贴：${evs[brush].em} ${evs[brush].t}` : "还没选贴纸"}</div>
+           <div class="cnt">${brushLabel}</div>
            <button class="btn" id="clearGrid">清空今天</button>
          </div>
+       </div>
+       <div class="poolhint" style="margin-top:12px;line-height:1.7">
+         <b style="color:#c47a4a">只记录，不计划</b><br>
+         记你<span style="color:#c47a4a">实际做了</span>什么，不是打算做什么<br>
+         记完别急着改 —— 改变会自己发生
        </div>
      </div>`;
 }
@@ -462,6 +480,14 @@ document.getElementById("lists").addEventListener("click", e => {
   if (cell) {
     const h = cell.dataset.h;
     const g = todayGrid();
+    if (brush === "__write") {
+      const txt = prompt(`${pad(+h)}:00 – ${pad((+h + 1) % 24)}:00 这小时做了什么？`);
+      if (txt && txt.trim()) {
+        g[h] = "txt:" + txt.trim().slice(0, 30);
+        save(); renderGrid();
+      }
+      return;
+    }
     if (brush) {
       g[h] = brush;
       save(); renderGrid();
