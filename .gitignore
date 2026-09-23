@@ -1,0 +1,23 @@
+# 依赖 / 缓存
+__pycache__/
+*.pyc
+node_modules/
+logs/
+state/
+data_cache/
+
+# 密钥绝不入库
+.env
+.env.*
+*.key
+*.pem
+secrets.json
+
+# 锁文件
+*.lock
+package-lock.json
+
+# 本地临时
+.DS_Store
+Thumbs.db
+_*.png
