@@ -113,6 +113,11 @@
   .blk .bs{font-size:10.5px;color:#c09472;font-variant-numeric:tabular-nums;line-height:1.4}
   .blk.tiny{padding:1px 8px;border-radius:7px}
   .blk.tiny .bt{font-size:12px;line-height:1.3}
+  /* 睡觉带：压在任务底下；任务盖上去 = 熬夜了 */
+  .blk.night{background:#eceefa;border-left-color:#98a2c6}
+  .blk.night .bt{color:#6f7ba4} .blk.night .bs{color:#9ba4c2}
+  .blk.night.slept{background:#e9f2ec;border-left-color:var(--green)}
+  .blk.night.slept .bt{color:#5b8f70} .blk.night.slept .bs{color:#93b8a1}
   .blk.pin{background:#fff5f0;border-left-style:dashed;padding-top:3px;padding-bottom:3px}
   .blk.blue{background:var(--blue-soft);border-left-color:var(--blue)}
   .blk.blue .bt{color:#4a7bb0} .blk.blue .bs{color:#8aabcd}
@@ -224,7 +229,8 @@ function load() {
   const tasks = s.tasks || [];
   // 从 v1 迁过来：老的只有 due，补成 start
   tasks.forEach(t => { if (t.due && !t.start) { t.start = t.due; t.end = t.end || ""; } });
-  return { tasks, apiKey: s.apiKey || "", steps: s.steps || [], importedOn: s.importedOn || "" };
+  return { tasks, apiKey: s.apiKey || "", steps: s.steps || [],
+           importedOn: s.importedOn || "", sleep: s.sleep || {} };
 }
 function save() { try { localStorage.setItem(KEY_STORE, JSON.stringify(S)); } catch (e) {} }
 
@@ -353,42 +359,50 @@ function renderList() {
 }
 
 /* ---------- 日程轴 ---------- */
+const HOUR_PX = 48;          // 24 小时 × 48 = 1152px，手机上正好滚
+const DAY_MIN = 1440;
+const AWAKE_LO = 6 * 60, AWAKE_HI = 22 * 60;
+// 睡觉横跨午夜，所以在 24 小时轴上被切成两段，但它们是**同一觉**
+const SLEEP_BANDS = [[0, AWAKE_LO], [AWAKE_HI, DAY_MIN]];
+const m2s = m => m >= DAY_MIN ? "24:00" : `${pad(Math.floor(m / 60))}:${pad(m % 60)}`;
+
 function renderAxis() {
-  const t0 = new Date();
-  const todays = S.tasks.filter(t => t.start && ymd(new Date(t.start)) === todayStr());
+  const dayStart = new Date(); dayStart.setHours(0, 0, 0, 0);
+  const dayEnd = new Date(dayStart.getTime() + 864e5);
 
-  if (!todays.length) {
-    document.getElementById("lists").innerHTML =
-      `<div class="sect"><div class="empty">今天还是一条空轴喵<br><span style="font-size:12.5px">下面可以一键导入明神的每日时间表</span></div>`
-      + importBar() + `</div>`;
-    return;
-  }
-
-  // 时间范围：默认 6–22，有更早/更晚的任务就撑开
-  let lo = 6 * 60, hi = 22 * 60;
-  const blocks = todays.map(t => {
+  // 跟今天有交集的任务都算（含昨夜跨过来的），再裁到今天窗口里
+  const blocks = [];
+  for (const t of S.tasks) {
+    if (!t.start) continue;
     const s = new Date(t.start);
     const e = t.end ? new Date(t.end) : new Date(s.getTime() + 30 * 60000);
-    const sm = s.getHours() * 60 + s.getMinutes();
-    let em = e.getHours() * 60 + e.getMinutes();
-    if (ymd(e) !== ymd(s)) em = 24 * 60;              // 跨天就画到今天末尾
-    if (em <= sm) em = sm + 30;
-    lo = Math.min(lo, Math.floor(sm / 60) * 60);
-    hi = Math.max(hi, Math.ceil(em / 60) * 60);
-    return { t, sm, em, pin: !t.end };
-  });
+    if (!(s < dayEnd && e > dayStart)) continue;
+    const sm = Math.max(0, (s - dayStart) / 60000);
+    const em = Math.min(DAY_MIN, (e - dayStart) / 60000);
+    if (em <= sm) continue;
+    blocks.push({ t, sm, em, pin: !t.end });
+  }
 
   layout(blocks);
 
-  const HPX = 56;
-  const H = (hi - lo) / 60 * HPX;
-  const y = m => (m - lo) / 60 * HPX;
+  const H = DAY_MIN / 60 * HOUR_PX;
+  const y = m => m / 60 * HOUR_PX;
 
   let gutter = "", lines = "", blks = "";
-  for (let m = lo; m <= hi; m += 60) {
-    gutter += `<div class="tl-lbl" style="top:${y(m)}px">${pad(Math.floor(m / 60))}:00</div>`;
-    if (m > lo) lines += `<div class="tl-hr" style="top:${y(m)}px"></div>`;
-    if (m + 30 < hi) lines += `<div class="tl-hr half" style="top:${y(m + 30)}px"></div>`;
+  for (let m = 0; m <= DAY_MIN; m += 60) {
+    gutter += `<div class="tl-lbl" style="top:${y(m)}px">${m2s(m)}</div>`;
+    if (m > 0) lines += `<div class="tl-hr" style="top:${y(m)}px"></div>`;
+    if (m + 30 < DAY_MIN) lines += `<div class="tl-hr half" style="top:${y(m + 30)}px"></div>`;
+  }
+
+  // 睡觉带：压在任务底下（z-index 1），任务盖上去就是「熬夜了」
+  const slept = !!S.sleep[todayStr()];
+  for (const [a, b] of SLEEP_BANDS) {
+    blks += `<div class="blk night ${slept ? "slept" : ""}" data-act="sleep"
+        style="top:${y(a)}px;height:${y(b) - y(a) - 3}px;left:3px;width:calc(100% - 9px);z-index:1">
+      <div class="bt">🌙 睡觉</div>
+      <div class="bs">${m2s(a)} – ${m2s(b)}${slept ? "　✓ 护住了" : ""}</div>
+    </div>`;
   }
 
   for (const b of blocks) {
@@ -405,19 +419,21 @@ function renderAxis() {
     </div>`;
   }
 
-  // 当前时刻红线
   const now = new Date();
   const nm = now.getHours() * 60 + now.getMinutes();
-  const nowLine = (nm >= lo && nm <= hi)
-    ? `<div class="tl-now" style="top:${y(nm)}px"></div>` : "";
+  const nowLine = `<div class="tl-now" style="top:${y(nm)}px"></div>`;
 
-  const free = freeGaps(blocks, lo, hi);
+  // 空档只算醒着的 16 小时，睡觉不算「空着」
+  const free = freeGaps(blocks, AWAKE_LO, AWAKE_HI);
 
   document.getElementById("lists").innerHTML =
-    `<div class="sect"><h2>今天的日程轴 <span>· ${fmtFree(free)}</span></h2>
+    `<div class="sect"><h2>今天的日程轴 <span>· 睡 8h｜${fmtFree(free)}</span></h2>
       <div class="tl">
         <div class="tl-gutter">${gutter}</div>
         <div class="tl-track" style="height:${H}px">${lines}${blks}${nowLine}</div>
+      </div>
+      <div class="hint" style="text-align:center;margin-top:10px">
+        点夜块 = 「这一觉护住了」${slept ? "（今天已标 ✓）" : ""}
       </div>
     </div>` + importBar();
 }
@@ -507,6 +523,15 @@ function esc(s) {
 /* ---------- 交互 ---------- */
 document.getElementById("lists").addEventListener("click", e => {
   if (e.target.id === "importSched") { doImport(); return; }
+
+  // 点夜块 = 这一觉护住了
+  if (e.target.closest('[data-act="sleep"]')) {
+    const k = todayStr();
+    S.sleep[k] = !S.sleep[k];
+    save(); render();
+    toast(S.sleep[k] ? "✓ 这一觉护住了" : "已取消");
+    return;
+  }
 
   const host = e.target.closest(".task, .blk");
   if (!host) return;
