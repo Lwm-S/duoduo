@@ -204,20 +204,23 @@
 <script>
 const KEY_STORE = "duoduo-v2";
 
-/* 明神的每日时间表（来自 生活秩序方案-v1.md 第二节） */
+/* 明神的每日时间表
+   ⚠️ 2026-09-23 明神口述校正，已与 生活秩序方案-v1.md 不同：
+      健身是 7:00–9:00（不是文档里的 6:30–8:30），早餐在 6–7 点（不是健身后），
+      洗澡并进健身那 2 小时里。改这块之前先问明神，别照旧文档抄。 */
+const SCHED_VER = 2;
 const SCHEDULE = [
-  ["起床 · 喝水 · 不碰手机", "06:00", "06:30"],
-  ["健身（含往返）",         "06:30", "08:30"],
-  ["洗澡 + 早餐",            "08:30", "09:00"],
-  ["晨学 2h（编程）",        "09:00", "11:00"],
-  ["午饭 + 午休",            "11:00", "13:00"],
-  ["下午学习块 1",           "13:00", "15:30"],
-  ["休息 · 起身走动",        "15:30", "15:45"],
-  ["下午学习块 2",           "15:45", "18:15"],
-  ["晚饭 + 放松",            "18:15", "20:15"],
-  ["看书 1h（《当下的力量》）", "20:15", "21:15"],
-  ["每日复盘 · 打勾",        "21:15", "21:30"],
-  ["睡前阅读 30 分钟",       "21:30", "22:00"],
+  ["起床 · 喝水 · 早餐",      "06:00", "07:00", "先一大杯温水 + 早餐吃饱；起床后不碰手机"],
+  ["健身（含洗澡）",          "07:00", "09:00", "往返 + 热身 + 力量训练 + 少量有氧 + 回家洗澡，都在里面"],
+  ["晨学 2h（编程）",         "09:00", "11:00", "精力最好的时段给最难的科目"],
+  ["午饭 + 午休",             "11:00", "13:00", "自己做饭 + 午睡 20–30 分钟"],
+  ["下午学习块 1",            "13:00", "15:30", "英语或编程"],
+  ["休息 · 起身走动",         "15:30", "15:45", "起来喝水、远眺"],
+  ["下午学习块 2",            "15:45", "18:15", "英语或编程"],
+  ["晚饭 + 放松",             "18:15", "20:15", "可以听播客；饭后先把洗漱完成"],
+  ["看书 1h（《当下的力量》）", "20:15", "21:15", "固定时间，雷打不动"],
+  ["每日复盘 · 打勾",         "21:15", "21:30", "打卡 + 心情分 + 一件好事"],
+  ["睡前阅读 30 分钟",        "21:30", "22:00", "纸质书 / Kindle，不用手机"],
 ];
 
 let S = load();
@@ -230,7 +233,8 @@ function load() {
   // 从 v1 迁过来：老的只有 due，补成 start
   tasks.forEach(t => { if (t.due && !t.start) { t.start = t.due; t.end = t.end || ""; } });
   return { tasks, apiKey: s.apiKey || "", steps: s.steps || [],
-           importedOn: s.importedOn || "", sleep: s.sleep || {} };
+           importedOn: s.importedOn || "", importedVer: s.importedVer || 0,
+           sleep: s.sleep || {} };
 }
 function save() { try { localStorage.setItem(KEY_STORE, JSON.stringify(S)); } catch (e) {} }
 
@@ -480,22 +484,32 @@ function fmtFree(gaps) {
 }
 
 function importBar() {
-  const done = S.importedOn === todayStr();
-  return `<div class="importbar">
-    <button class="btn" id="importSched" ${done ? "disabled" : ""}>${done ? "✓ 今天已导入" : "导入每日时间表"}</button>
-    <div class="hint">${done ? "要重来就先删掉轴上的块" : "把明神 6:00–22:00 的计划铺到轴上"}</div>
-  </div>`;
+  const sameDay = S.importedOn === todayStr();
+  const stale = sameDay && S.importedVer !== SCHED_VER;   // 作息改过了，允许重铺
+  const btn = (!sameDay || stale)
+    ? `<button class="btn" id="importSched">${stale ? "重新导入（作息已改）" : "导入每日时间表"}</button>`
+    : `<button class="btn" id="importSched" disabled>✓ 今天已导入</button>`;
+  const hint = stale ? "苏苏更新了作息，重铺一次会替换掉旧的"
+             : sameDay ? "要重来就先删掉轴上的块"
+             : "把明神 6:00–22:00 的计划铺到轴上";
+  return `<div class="importbar">${btn}<div class="hint">${hint}</div></div>`;
 }
 
 function doImport() {
-  if (S.importedOn === todayStr()) { toast("今天已经导入过了喵"); return; }
   const d = todayStr();
-  const mk = (title, s, e) => ({
+  const sameDay = S.importedOn === d;
+  const stale = sameDay && S.importedVer !== SCHED_VER;
+  if (sameDay && !stale) { toast("今天已经导入过了喵"); return; }
+
+  // 重铺时先清掉上次导入的（只删带 sched 标记、且属于今天的，不动明神自己建的）
+  if (stale) S.tasks = S.tasks.filter(t => !(t.sched && t.start && t.start.startsWith(d)));
+
+  const mk = (title, s, e, note) => ({
     id: uid(), title, start: `${d}T${s}`, end: `${d}T${e}`,
-    note: "", done: false, createdAt: Date.now(), cls: "blue",
+    note: note || "", done: false, createdAt: Date.now(), cls: "blue", sched: true,
   });
-  SCHEDULE.forEach(([title, s, e]) => S.tasks.push(mk(title, s, e)));
-  S.importedOn = d;
+  SCHEDULE.forEach(([title, s, e, note]) => S.tasks.push(mk(title, s, e, note)));
+  S.importedOn = d; S.importedVer = SCHED_VER;
   save(); render();
   toast(`铺好了 ${SCHEDULE.length} 块 ✓`);
 }
