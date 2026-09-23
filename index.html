@@ -94,6 +94,43 @@
   .gridfoot .cnt{font-size:12px;color:var(--dim)}
   .gridfoot .btn{flex:none;padding:7px 13px;font-size:12.5px;background:#f5ece0;color:#8a7a66}
 
+  /* ---------- 日历回看 ---------- */
+  .cal{background:var(--card);border:1.5px solid var(--line);border-radius:16px;padding:14px}
+  .calhead{display:flex;align-items:center;margin-bottom:12px}
+  .calhead .m{font-size:15px;font-weight:700}
+  .calhead .nav{margin-left:auto;display:flex;gap:6px}
+  .calhead .nav span{width:32px;height:32px;display:flex;align-items:center;justify-content:center;
+    border-radius:9px;background:#f5ece0;color:#8a7a66;cursor:pointer;font-size:15px;user-select:none}
+  .calhead .nav span:active{background:#eee0cf}
+  .calgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
+  .calwd{text-align:center;font-size:11px;color:#bcae9c;padding-bottom:4px}
+  .calday{aspect-ratio:1;border-radius:10px;display:flex;align-items:center;justify-content:center;
+    font-size:13px;font-variant-numeric:tabular-nums;cursor:pointer;background:#faf7f2;color:#c4b6a4;
+    transition:transform .1s;position:relative}
+  .calday.blank{background:transparent;cursor:default}
+  .calday.has{color:#8a5a2e;font-weight:600}
+  .calday.today{box-shadow:inset 0 0 0 1.5px var(--warm)}
+  .calday.sel{box-shadow:inset 0 0 0 2.5px var(--ink)}
+  .calday:active{transform:scale(.94)}
+  .callegend{display:flex;align-items:center;gap:6px;margin-top:12px;font-size:11px;color:#bcae9c}
+  .callegend i{width:13px;height:13px;border-radius:4px;display:inline-block}
+  .daydetail{margin-top:16px;background:var(--card);border:1.5px solid var(--line);border-radius:16px;padding:14px}
+  .daydetail .dh{font-size:13.5px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+  .daydetail .dh span{font-weight:400;color:var(--dim);font-size:12px}
+  .drow{display:flex;gap:10px;align-items:center;padding:4px 0;border-bottom:1px solid #faf5ee;font-size:13px}
+  .drow:last-child{border-bottom:0}
+  .drow .hh{width:34px;flex:none;color:#bcae9c;font-size:11.5px;font-variant-numeric:tabular-nums}
+  .drow .dot{width:7px;height:7px;border-radius:50%;flex:none;background:var(--c-fg,#d8c9b6)}
+  .drow.empty .hh{opacity:.4}
+  .drow.empty .tx{color:#ded2c2;font-size:12px}
+  .exportbar{display:flex;gap:8px;margin-top:14px}
+  .exportbar .btn{flex:1;padding:9px 10px;font-size:13px;background:#f5ece0;color:#8a7a66}
+  textarea.exp{width:100%;height:44vh;font-family:ui-monospace,Consolas,monospace;font-size:11.5px;
+    line-height:1.6;border:1.5px solid var(--line);border-radius:12px;padding:12px;background:#fff;
+    color:var(--ink);resize:none;outline:none;white-space:pre;overflow:auto}
+  .stat{display:flex;gap:16px;margin-top:10px;font-size:12px;color:var(--dim);flex-wrap:wrap}
+  .stat b{color:var(--warm);font-size:14px}
+
   /* 分类配色 */
   [data-c=night]{--c-bg:#eceefa;--c-fg:#6b78a6}
   [data-c=meal] {--c-bg:#fdf1e0;--c-fg:#b5783a}
@@ -158,6 +195,7 @@
 
   <div class="tabs">
     <div class="tab" data-view="grid">时间轴</div>
+    <div class="tab" data-view="cal">日历</div>
     <div class="tab on" data-view="list">列表</div>
   </div>
 
@@ -185,6 +223,19 @@
     <p>只存在这台设备本地，不会上传到任何地方。<br>苏苏用它来帮明神建任务和拆解。</p>
     <input type="password" id="keyinp" placeholder="sk-...">
     <button class="btn btn-a" id="savekey">保存</button>
+  </div>
+</div>
+
+<div class="sheet" id="exsheet">
+  <div class="sheet-in">
+    <h3>全部记录</h3>
+    <p>复制走存着 —— 浏览器本地数据<b>不是永久的</b>，iOS 清理 Safari 数据时会被清掉。</p>
+    <textarea class="exp" id="extext" readonly></textarea>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-b" id="excopy">复制</button>
+      <button class="btn btn-b" id="exdown">下载 .txt</button>
+    </div>
+    <button class="btn btn-a" id="exclose">关闭</button>
   </div>
 </div>
 
@@ -318,6 +369,7 @@ function render(popId) {
   document.getElementById("today").textContent =
     new Date().toLocaleDateString("zh-CN", { month: "long", day: "numeric", weekday: "long" });
   if (view === "grid") renderGrid();
+  else if (view === "cal") renderCalendar();
   else renderList();
   if (popId) {
     const el = document.querySelector(`[data-id="${popId}"]`);
@@ -332,6 +384,16 @@ function allEvents() {
   S.custom.forEach(c => out[c.id] = c);
   return out;
 }
+
+/* 一格的值 → 可显示的事件。手写记录存成 "txt:..." */
+function resolveCell(id) {
+  if (!id) return null;
+  if (id.startsWith("txt:")) return { em: "✏️", t: id.slice(4), c: "honest" };
+  return allEvents()[id] || { em: "·", t: "（已删）", c: "honest" };
+}
+
+const dayHours = ds => Object.keys(S.grid[ds] || {}).filter(k => S.grid[ds][k]).length;
+const WD = ["日", "一", "二", "三", "四", "五", "六"];
 
 function renderGrid() {
   const evs = allEvents();
@@ -360,11 +422,8 @@ function renderGrid() {
 
   let rows = "";
   for (let h = 0; h < 24; h++) {
-    const id = g[h];
     // 格子里可能是池子里的贴纸，也可能是手写的一行字（存成 "txt:..."）
-    const ev = !id ? null
-      : id.startsWith("txt:") ? { em: "✏️", t: id.slice(4), c: "honest" }
-      : evs[id];
+    const ev = resolveCell(g[h]);
     rows += `<div class="hr ${h === curH ? "now" : ""}">
       <div class="hlbl">${pad(h)}</div>
       <div class="hcell ${ev ? "" : "empty"}" data-h="${h}" ${ev ? `data-c="${ev.c}"` : ""}>
@@ -402,6 +461,95 @@ function renderGrid() {
          记完别急着改 —— 改变会自己发生
        </div>
      </div>`;
+}
+
+/* ---------- 日历回看 ---------- */
+let calY = null, calM = null, calSel = null;
+
+function renderCalendar() {
+  const now = new Date();
+  if (calY === null) { calY = now.getFullYear(); calM = now.getMonth(); }
+  if (!calSel) calSel = todayStr();
+
+  const days = new Date(calY, calM + 1, 0).getDate();
+  const lead = new Date(calY, calM, 1).getDay();
+
+  let cells = WD.map(w => `<div class="calwd">${w}</div>`).join("");
+  for (let i = 0; i < lead; i++) cells += `<div class="calday blank"></div>`;
+  for (let d = 1; d <= days; d++) {
+    const ds = `${calY}-${pad(calM + 1)}-${pad(d)}`;
+    const n = dayHours(ds);
+    const a = n ? (0.10 + 0.55 * Math.min(n / 24, 1)) : 0;
+    const cls = ["calday", n ? "has" : "", ds === todayStr() ? "today" : "",
+                 ds === calSel ? "sel" : ""].join(" ");
+    cells += `<div class="${cls}" data-day="${ds}"
+      style="background:${n ? `rgba(224,139,76,${a.toFixed(2)})` : "#faf7f2"}">${d}</div>`;
+  }
+
+  const allDays = Object.keys(S.grid).filter(d => dayHours(d) > 0);
+  const totalH = allDays.reduce((s, d) => s + dayHours(d), 0);
+
+  document.getElementById("lists").innerHTML =
+    `<div class="sect">
+       <h2>日历回看 <span>· 颜色越深，那天记得越多</span></h2>
+       <div class="cal">
+         <div class="calhead">
+           <div class="m">${calY} 年 ${calM + 1} 月</div>
+           <div class="nav"><span data-mv="-1">‹</span><span data-mv="1">›</span></div>
+         </div>
+         <div class="calgrid">${cells}</div>
+         <div class="callegend">
+           <span>少</span>
+           <i style="background:rgba(224,139,76,.10)"></i>
+           <i style="background:rgba(224,139,76,.25)"></i>
+           <i style="background:rgba(224,139,76,.40)"></i>
+           <i style="background:rgba(224,139,76,.65)"></i>
+           <span>多</span>
+         </div>
+         <div class="stat">
+           <span>记过 <b>${allDays.length}</b> 天</span>
+           <span>共 <b>${totalH}</b> 小时</span>
+         </div>
+       </div>
+     </div>
+     ${calSel ? dayDetailHTML(calSel) : ""}
+     <div class="exportbar"><button class="btn" id="exportAll">导出全部记录</button></div>`;
+}
+
+function dayDetailHTML(ds) {
+  const g = S.grid[ds] || {};
+  const d = new Date(ds + "T00:00:00");
+  const rows = [];
+  for (let h = 0; h < 24; h++) {
+    const ev = resolveCell(g[h]);
+    rows.push(ev
+      ? `<div class="drow" data-c="${ev.c}"><div class="hh">${pad(h)}:00</div><div class="dot"></div><div class="tx">${ev.em} ${esc(ev.t)}</div></div>`
+      : `<div class="drow empty"><div class="hh">${pad(h)}:00</div><div class="tx">—</div></div>`);
+  }
+  return `<div class="sect"><div class="daydetail">
+      <div class="dh">${d.getMonth() + 1}月${d.getDate()}日 周${WD[d.getDay()]}
+        <span>${ds === todayStr() ? "· 今天" : ""} · 记了 ${dayHours(ds)} 小时</span></div>
+      ${rows.join("")}
+    </div></div>`;
+}
+
+/* 导出：人家方法里说的「复制到单独的地方，完整存留」 */
+function buildExport() {
+  const days = Object.keys(S.grid).filter(d => dayHours(d) > 0).sort().reverse();
+  const L = ["日程管理苏苏崽 · 全部时间轴记录",
+             `导出时间：${new Date().toLocaleString("zh-CN")}`,
+             `共 ${days.length} 天\n`];
+  for (const ds of days) {
+    const d = new Date(ds + "T00:00:00");
+    L.push(`=== ${ds} 周${WD[d.getDay()]} ===`);
+    const g = S.grid[ds];
+    for (let h = 0; h < 24; h++) {
+      const ev = resolveCell(g[h]);
+      if (ev) L.push(`${pad(h)}:00  ${ev.t}`);
+    }
+    L.push("");
+  }
+  return L.join("\n");
 }
 
 function renderList() {
@@ -468,6 +616,17 @@ document.getElementById("lists").addEventListener("click", e => {
     }
     return;
   }
+  // 日历回看
+  if (e.target.dataset.mv) {
+    calM += +e.target.dataset.mv;
+    if (calM < 0) { calM = 11; calY--; }
+    if (calM > 11) { calM = 0; calY++; }
+    renderCalendar(); return;
+  }
+  const dayEl = e.target.closest("[data-day]");
+  if (dayEl) { calSel = dayEl.dataset.day; renderCalendar(); return; }
+  if (e.target.id === "exportAll") { openExport(); return; }
+
   if (e.target.id === "clearGrid") {
     if (!confirm("清空今天的 24 格？（事件池不受影响）")) return;
     S.grid[todayStr()] = {};
@@ -594,6 +753,37 @@ document.getElementById("savekey").addEventListener("click", () => {
   S.apiKey = document.getElementById("keyinp").value.trim();
   save(); sheet.classList.remove("show");
   toast(S.apiKey ? "Key 存好了 ✓" : "已清空");
+});
+
+/* ---------- 导出 ---------- */
+const exsheet = document.getElementById("exsheet");
+function openExport() {
+  document.getElementById("extext").value = buildExport();
+  exsheet.classList.add("show");
+}
+exsheet.addEventListener("click", e => { if (e.target === exsheet) exsheet.classList.remove("show"); });
+document.getElementById("exclose").addEventListener("click", () => exsheet.classList.remove("show"));
+
+document.getElementById("excopy").addEventListener("click", () => {
+  const ta = document.getElementById("extext");
+  ta.removeAttribute("readonly");
+  ta.focus(); ta.select(); ta.setSelectionRange(0, 999999);
+  let ok = false;
+  try { ok = document.execCommand("copy"); } catch (e) {}
+  ta.setAttribute("readonly", "");
+  // ⚠️ HTTP 页面上 navigator.clipboard 是 undefined（要安全上下文），所以只能靠 execCommand
+  if (ok) toast("复制好了 ✓ 粘到微信 / 备忘录存着");
+  else toast("长按文本框 → 全选 → 复制", 3500);
+});
+
+document.getElementById("exdown").addEventListener("click", () => {
+  const blob = new Blob([document.getElementById("extext").value], { type: "text/plain;charset=utf-8" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `苏苏崽记录-${todayStr()}.txt`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 3000);
+  toast("下载了 ✓");
 });
 
 /* ---------- PWA ---------- */
