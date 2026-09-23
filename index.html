@@ -5,17 +5,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="多多">
+<meta name="apple-mobile-web-app-title" content="日程管理苏苏崽">
 <meta name="theme-color" content="#fdf6ee">
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.webmanifest">
-<title>多多</title>
+<title>日程管理苏苏崽</title>
 <style>
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   :root{
     --bg:#fdf6ee; --card:#fff; --line:#efe3d4; --ink:#3b3229; --dim:#a2937f;
     --warm:#e08b4c; --warm-soft:#fdf0e2; --green:#57a86f; --green-soft:#eef7f0;
-    --blue:#5e8fc4; --blue-soft:#eef4fa;
+    --blue:#5e8fc4; --blue-soft:#eef4fa; --now:#e2574c;
   }
   body{
     margin:0;background:var(--bg);color:var(--ink);line-height:1.6;
@@ -24,11 +24,19 @@
   }
   .wrap{max-width:560px;margin:0 auto}
 
-  header{display:flex;align-items:center;gap:10px;margin-bottom:18px}
+  header{display:flex;align-items:center;gap:10px;margin-bottom:14px}
   .cat{font-size:26px;line-height:1}
   .title{font-size:19px;font-weight:700;letter-spacing:.5px}
   .title small{display:block;font-size:12px;font-weight:400;color:var(--dim);letter-spacing:0}
   .gear{margin-left:auto;font-size:19px;color:var(--dim);cursor:pointer;padding:6px}
+
+  /* 视图切换 */
+  .tabs{display:flex;gap:6px;background:#f3e9dc;border-radius:12px;padding:4px;margin-bottom:14px}
+  .tab{
+    flex:1;text-align:center;font-size:14px;font-weight:600;color:var(--dim);
+    padding:8px 0;border-radius:9px;cursor:pointer;transition:all .15s;
+  }
+  .tab.on{background:#fff;color:var(--warm);box-shadow:0 1px 4px rgba(180,150,110,.12)}
 
   .composer{background:var(--card);border:1.5px solid var(--line);border-radius:18px;padding:14px;box-shadow:0 2px 10px rgba(180,150,110,.06)}
   textarea{
@@ -86,6 +94,39 @@
 
   .empty{color:#c4b6a4;font-size:14px;text-align:center;padding:26px 0}
 
+  /* ---------- 时间轴 ---------- */
+  .tl{display:flex;gap:8px;background:var(--card);border:1.5px solid var(--line);
+      border-radius:16px;padding:14px 12px 14px 0;overflow:hidden}
+  .tl-gutter{width:52px;flex:none;position:relative}
+  .tl-track{flex:1;position:relative;border-left:1.5px solid #eaded0;min-width:0}
+  .tl-hr{position:absolute;left:0;right:0;border-top:1px dashed #f2e9dd}
+  .tl-hr.half{border-top-style:dotted;border-color:#f7f1e8}
+  .tl-lbl{position:absolute;right:8px;transform:translateY(-50%);font-size:11px;color:#bcae9c;font-variant-numeric:tabular-nums}
+  .blk{
+    position:absolute;left:3px;border-radius:10px;padding:5px 9px;overflow:hidden;
+    background:var(--warm-soft);border-left:3px solid var(--warm);cursor:pointer;
+    transition:opacity .15s,transform .12s;
+  }
+  .blk:active{transform:scale(.985)}
+  .blk .bt{font-size:13px;font-weight:600;color:#a9663a;line-height:1.35;
+           overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .blk .bs{font-size:10.5px;color:#c09472;font-variant-numeric:tabular-nums;line-height:1.4}
+  .blk.tiny{padding:1px 8px;border-radius:7px}
+  .blk.tiny .bt{font-size:12px;line-height:1.3}
+  .blk.pin{background:#fff5f0;border-left-style:dashed;padding-top:3px;padding-bottom:3px}
+  .blk.blue{background:var(--blue-soft);border-left-color:var(--blue)}
+  .blk.blue .bt{color:#4a7bb0} .blk.blue .bs{color:#8aabcd}
+  .blk.on{background:var(--green-soft);border-left-color:var(--green);opacity:.72}
+  .blk.on .bt{color:#5d8f70;text-decoration:line-through;text-decoration-color:#b9d6c3}
+  .blk.on .bs{color:#93b8a1}
+  .tl-now{position:absolute;left:-4px;right:0;height:0;border-top:2px solid var(--now);z-index:5}
+  .tl-now::before{content:"";position:absolute;left:-4px;top:-4px;width:7px;height:7px;
+                  border-radius:50%;background:var(--now)}
+
+  .importbar{margin:14px 0 4px;display:flex;gap:8px;align-items:center}
+  .importbar .btn{flex:none;padding:8px 14px;font-size:13px;background:#f3e9dc;color:#8a7a66}
+  .importbar .hint{font-size:12px;color:#bcae9c;line-height:1.5}
+
   .toast{
     position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 26px);transform:translate(-50%,20px);
     background:#3b3229;color:#fff;font-size:14px;padding:11px 20px;border-radius:24px;
@@ -119,19 +160,24 @@
 
   <header>
     <div class="cat">🐱</div>
-    <div class="title">多多<small id="today">—</small></div>
+    <div class="title">日程管理苏苏崽<small id="today">—</small></div>
     <div class="gear" id="gear">⚙️</div>
   </header>
 
+  <div class="tabs">
+    <div class="tab on" data-view="list">列表</div>
+    <div class="tab" data-view="axis">日程轴</div>
+  </div>
+
   <div class="composer">
-    <textarea id="inp" rows="2" placeholder="跟苏苏说你要做什么…&#10;比如「明天下午3点 小组开会」"></textarea>
+    <textarea id="inp" rows="2" placeholder="跟苏苏说你要做什么…&#10;比如「9点到11点 晨学编程」"></textarea>
     <div class="btns">
       <button class="btn btn-a" id="add">建成任务</button>
       <button class="btn btn-b" id="split">帮我拆解</button>
     </div>
     <div class="chips">
+      <span class="chip">9点到11点 晨学编程</span>
       <span class="chip">明天下午3点 小组开会</span>
-      <span class="chip">今晚 10 点前洗澡</span>
       <span class="chip">我该找工作了</span>
     </div>
   </div>
@@ -151,15 +197,34 @@
 </div>
 
 <script>
-const KEY_STORE = "duoduo-v1";
-const CHIPS = ["明天下午3点 小组开会", "今晚 10 点前洗澡", "我该找工作了"];
+const KEY_STORE = "duoduo-v2";
+
+/* 明神的每日时间表（来自 生活秩序方案-v1.md 第二节） */
+const SCHEDULE = [
+  ["起床 · 喝水 · 不碰手机", "06:00", "06:30"],
+  ["健身（含往返）",         "06:30", "08:30"],
+  ["洗澡 + 早餐",            "08:30", "09:00"],
+  ["晨学 2h（编程）",        "09:00", "11:00"],
+  ["午饭 + 午休",            "11:00", "13:00"],
+  ["下午学习块 1",           "13:00", "15:30"],
+  ["休息 · 起身走动",        "15:30", "15:45"],
+  ["下午学习块 2",           "15:45", "18:15"],
+  ["晚饭 + 放松",            "18:15", "20:15"],
+  ["看书 1h（《当下的力量》）", "20:15", "21:15"],
+  ["每日复盘 · 打勾",        "21:15", "21:30"],
+  ["睡前阅读 30 分钟",       "21:30", "22:00"],
+];
 
 let S = load();
+let view = "list";
 
 function load() {
   let s = {};
   try { s = JSON.parse(localStorage.getItem(KEY_STORE)) || {}; } catch (e) {}
-  return { tasks: s.tasks || [], apiKey: s.apiKey || "", steps: s.steps || [] };
+  const tasks = s.tasks || [];
+  // 从 v1 迁过来：老的只有 due，补成 start
+  tasks.forEach(t => { if (t.due && !t.start) { t.start = t.due; t.end = t.end || ""; } });
+  return { tasks, apiKey: s.apiKey || "", steps: s.steps || [], importedOn: s.importedOn || "" };
 }
 function save() { try { localStorage.setItem(KEY_STORE, JSON.stringify(S)); } catch (e) {} }
 
@@ -167,19 +232,18 @@ const uid = () => Math.random().toString(36).slice(2, 10);
 const pad = n => String(n).padStart(2, "0");
 const ymd = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
 const todayStr = () => ymd(new Date());
+const hhmm = d => `${pad(d.getHours())}:${pad(d.getMinutes())}`;
 
-function fmtDue(iso) {
-  if (!iso) return null;
-  const d = new Date(iso);
-  if (isNaN(d)) return null;
-  const t = ymd(d), n = todayStr();
-  const tm = new Date(); tm.setDate(tm.getDate() + 1);
-  const hm = `${pad(d.getHours())}:${pad(d.getMinutes())}`;
-  if (t === n) return `今天 ${hm}`;
-  if (t === ymd(tm)) return `明天 ${hm}`;
-  return `${d.getMonth()+1}月${d.getDate()}日 ${hm}`;
+function fmtWhen(t) {
+  const s = t.start && new Date(t.start);
+  if (!s || isNaN(s)) return null;
+  const e = t.end && new Date(t.end);
+  const hasEnd = e && !isNaN(e) && e > s;
+  const day = ymd(s) === todayStr() ? "今天"
+            : (ymd(s) === ymd(new Date(Date.now() + 864e5)) ? "明天" : `${s.getMonth()+1}月${s.getDate()}日`);
+  return hasEnd ? `${day} ${hhmm(s)}–${hhmm(e)}` : `${day} ${hhmm(s)}`;
 }
-const isLate = t => t.due && !t.done && new Date(t.due) < new Date();
+const isLate = t => t.start && !t.done && new Date(t.end || t.start) < new Date();
 
 function toast(msg, ms = 2000) {
   const el = document.getElementById("toast");
@@ -211,21 +275,24 @@ async function askAI(system, user) {
 function nowStr() {
   const d = new Date();
   const wd = ["周日","周一","周二","周三","周四","周五","周六"][d.getDay()];
-  return `${ymd(d)} ${wd} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  return `${ymd(d)} ${wd} ${hhmm(d)}`;
 }
 
-const SYS_TASK = `你是任务解析助手。把用户的一句话解析成结构化任务。
+const SYS_TASK = `你是日程解析助手。把用户的一句话解析成结构化日程。
 当前时间：{{NOW}}
 
 只返回 JSON，格式：
-{"tasks":[{"title":"任务标题","due":"YYYY-MM-DDTHH:mm","note":"补充说明或空字符串"}]}
+{"tasks":[{"title":"标题","start":"YYYY-MM-DDTHH:mm","end":"YYYY-MM-DDTHH:mm","note":"补充说明或空字符串"}]}
 
 规则：
-- 用户说了时间（今天/明天/后天/周X/下午3点/晚上）就换算成绝对时间 YYYY-MM-DDTHH:mm
-- 只说了日期没说时间点，默认 09:00；只说了"晚上"默认 20:00
-- 完全没提时间的，due 用空字符串 ""
+- 用户说了**时间段**（「9点到11点」「上午9-11点」「下午2-4点」）→ start 和 end 都要填
+- 只说了**时间点**（「下午3点开会」「今晚10点前洗澡」）→ 只填 start，end 填空字符串 ""
+- 时间换算成绝对时间：今天/明天/后天/周X 都要算成具体日期
+- 只说了日期没说钟点 → start 用 09:00；只说了「晚上」→ 20:00
+- 完全没提时间 → start 和 end 都填空字符串 ""
 - 一句话里有多件事就拆成多个 task
 - title 精简到 15 字以内，去掉时间词
+- end 必须晚于 start；不确定时长就别填 end
 - 不要问用户问题，直接给结果`;
 
 const SYS_SPLIT = `用户想做一件大事，但动不了。你的工作是把这件事砸成小石子。
@@ -246,29 +313,35 @@ function render(popId) {
   document.getElementById("today").textContent =
     new Date().toLocaleDateString("zh-CN", { month: "long", day: "numeric", weekday: "long" });
 
-  const open = S.tasks.filter(t => !t.done);
-  const today = open.filter(t => !t.due || ymd(new Date(t.due)) <= todayStr());
-  const later = open.filter(t => t.due && ymd(new Date(t.due)) > todayStr());
-  const done = S.tasks.filter(t => t.done);
+  if (view === "axis") renderAxis(popId);
+  else renderList(popId);
 
+  if (popId) {
+    const el = document.querySelector(`[data-id="${popId}"]`);
+    if (el) el.classList.add("pop");
+  }
+}
+
+function renderList() {
+  const open = S.tasks.filter(t => !t.done);
+  const today = open.filter(t => !t.start || ymd(new Date(t.start)) <= todayStr());
+  const later = open.filter(t => t.start && ymd(new Date(t.start)) > todayStr());
+  const done = S.tasks.filter(t => t.done);
   const steps = S.steps.filter(s => !s.done);
   const stepsDone = S.steps.filter(s => s.done);
 
   let html = "";
 
   if (steps.length) {
-    html += `<div class="sect"><h2>苏苏帮明神砸开的石子 <span>· 今天从第一步开始</span></h2>`;
-    html += steps.map(t => taskHTML(t, "step")).join("");
-    html += `</div>`;
+    html += `<div class="sect"><h2>苏苏帮明神砸开的石子 <span>· 今天从第一步开始</span></h2>`
+         +  steps.map(t => taskHTML(t, "step")).join("") + `</div>`;
   }
 
-  html += `<div class="sect"><h2>今天</h2>`;
-  html += today.length ? today.map(t => taskHTML(t)).join("") : `<div class="empty">今天还没有安排喵</div>`;
-  html += `</div>`;
+  html += `<div class="sect"><h2>今天</h2>`
+       +  (today.length ? today.map(t => taskHTML(t)).join("") : `<div class="empty">今天还没有安排喵</div>`)
+       +  `</div>`;
 
-  if (later.length) {
-    html += `<div class="sect"><h2>以后</h2>` + later.map(t => taskHTML(t)).join("") + `</div>`;
-  }
+  if (later.length) html += `<div class="sect"><h2>以后</h2>` + later.map(t => taskHTML(t)).join("") + `</div>`;
 
   const allDone = done.concat(stepsDone);
   if (allDone.length) {
@@ -277,21 +350,148 @@ function render(popId) {
   }
 
   document.getElementById("lists").innerHTML = html;
+}
 
-  if (popId) {
-    const el = document.querySelector(`[data-id="${popId}"]`);
-    if (el) el.classList.add("pop");
+/* ---------- 日程轴 ---------- */
+function renderAxis() {
+  const t0 = new Date();
+  const todays = S.tasks.filter(t => t.start && ymd(new Date(t.start)) === todayStr());
+
+  if (!todays.length) {
+    document.getElementById("lists").innerHTML =
+      `<div class="sect"><div class="empty">今天还是一条空轴喵<br><span style="font-size:12.5px">下面可以一键导入明神的每日时间表</span></div>`
+      + importBar() + `</div>`;
+    return;
   }
+
+  // 时间范围：默认 6–22，有更早/更晚的任务就撑开
+  let lo = 6 * 60, hi = 22 * 60;
+  const blocks = todays.map(t => {
+    const s = new Date(t.start);
+    const e = t.end ? new Date(t.end) : new Date(s.getTime() + 30 * 60000);
+    const sm = s.getHours() * 60 + s.getMinutes();
+    let em = e.getHours() * 60 + e.getMinutes();
+    if (ymd(e) !== ymd(s)) em = 24 * 60;              // 跨天就画到今天末尾
+    if (em <= sm) em = sm + 30;
+    lo = Math.min(lo, Math.floor(sm / 60) * 60);
+    hi = Math.max(hi, Math.ceil(em / 60) * 60);
+    return { t, sm, em, pin: !t.end };
+  });
+
+  layout(blocks);
+
+  const HPX = 56;
+  const H = (hi - lo) / 60 * HPX;
+  const y = m => (m - lo) / 60 * HPX;
+
+  let gutter = "", lines = "", blks = "";
+  for (let m = lo; m <= hi; m += 60) {
+    gutter += `<div class="tl-lbl" style="top:${y(m)}px">${pad(Math.floor(m / 60))}:00</div>`;
+    if (m > lo) lines += `<div class="tl-hr" style="top:${y(m)}px"></div>`;
+    if (m + 30 < hi) lines += `<div class="tl-hr half" style="top:${y(m + 30)}px"></div>`;
+  }
+
+  for (const b of blocks) {
+    const w = 100 / b.cols;
+    const left = b.col * w;
+    const top = y(b.sm), hgt = Math.max(y(b.em) - y(b.sm) - 3, 22);
+    const tiny = hgt < 32;
+    // 矮块 z-index 更高：不然短时段（15 分钟那种）会被下一块盖住，字都看不见
+    blks += `<div class="blk ${b.t.done ? "on" : ""} ${b.pin ? "pin" : ""} ${b.cls || ""} ${tiny ? "tiny" : ""}"
+        data-id="${b.t.id}"
+        style="top:${top}px;height:${hgt}px;z-index:${Math.round(300 - hgt)};left:calc(3px + ${left}% - ${left * 0.03}px);width:calc(${w}% - 9px)">
+      <div class="bt">${esc(b.t.title)}</div>
+      ${hgt > 34 ? `<div class="bs">${hhmm(new Date(b.t.start))}${b.t.end ? "–" + hhmm(new Date(b.t.end)) : ""}</div>` : ""}
+    </div>`;
+  }
+
+  // 当前时刻红线
+  const now = new Date();
+  const nm = now.getHours() * 60 + now.getMinutes();
+  const nowLine = (nm >= lo && nm <= hi)
+    ? `<div class="tl-now" style="top:${y(nm)}px"></div>` : "";
+
+  const free = freeGaps(blocks, lo, hi);
+
+  document.getElementById("lists").innerHTML =
+    `<div class="sect"><h2>今天的日程轴 <span>· ${fmtFree(free)}</span></h2>
+      <div class="tl">
+        <div class="tl-gutter">${gutter}</div>
+        <div class="tl-track" style="height:${H}px">${lines}${blks}${nowLine}</div>
+      </div>
+    </div>` + importBar();
+}
+
+/* 重叠块分栏：把互相重叠的块排进不同的列 */
+function layout(blocks) {
+  blocks.sort((a, b) => a.sm - b.sm || a.em - b.em);
+  let cluster = [], colEnds = [], clusterEnd = -1;
+  const flush = () => {
+    const n = Math.max(...cluster.map(b => b.col)) + 1;
+    cluster.forEach(b => b.cols = n);
+    cluster = []; colEnds = [];
+  };
+  for (const b of blocks) {
+    if (cluster.length && b.sm >= clusterEnd) flush();
+    let c = colEnds.findIndex(e => e <= b.sm);
+    if (c === -1) { colEnds.push(b.em); c = colEnds.length - 1; }
+    else colEnds[c] = b.em;
+    b.col = c;
+    cluster.push(b);
+    clusterEnd = cluster.length === 1 ? b.em : Math.max(clusterEnd, b.em);
+  }
+  if (cluster.length) flush();
+  return blocks;
+}
+
+/* 算空档（≥30 分钟） */
+function freeGaps(blocks, lo, hi) {
+  const busy = blocks.map(b => [b.sm, b.em]).sort((a, b) => a[0] - b[0]);
+  const gaps = []; let cur = lo;
+  for (const [s, e] of busy) {
+    if (s - cur >= 30) gaps.push([cur, s]);
+    cur = Math.max(cur, e);
+  }
+  if (hi - cur >= 30) gaps.push([cur, hi]);
+  return gaps;
+}
+function fmtFree(gaps) {
+  if (!gaps.length) return "排满了，没有空档";
+  const total = gaps.reduce((a, [s, e]) => a + (e - s), 0);
+  const fmt = m => `${pad(Math.floor(m / 60))}:${pad(m % 60)}`;
+  const list = gaps.slice(0, 3).map(([s, e]) => `${fmt(s)}–${fmt(e)}`).join("、");
+  return `空档 ${(total / 60).toFixed(1)}h${gaps.length > 3 ? " 等" : "：" + list}`;
+}
+
+function importBar() {
+  const done = S.importedOn === todayStr();
+  return `<div class="importbar">
+    <button class="btn" id="importSched" ${done ? "disabled" : ""}>${done ? "✓ 今天已导入" : "导入每日时间表"}</button>
+    <div class="hint">${done ? "要重来就先删掉轴上的块" : "把明神 6:00–22:00 的计划铺到轴上"}</div>
+  </div>`;
+}
+
+function doImport() {
+  if (S.importedOn === todayStr()) { toast("今天已经导入过了喵"); return; }
+  const d = todayStr();
+  const mk = (title, s, e) => ({
+    id: uid(), title, start: `${d}T${s}`, end: `${d}T${e}`,
+    note: "", done: false, createdAt: Date.now(), cls: "blue",
+  });
+  SCHEDULE.forEach(([title, s, e]) => S.tasks.push(mk(title, s, e)));
+  S.importedOn = d;
+  save(); render();
+  toast(`铺好了 ${SCHEDULE.length} 块 ✓`);
 }
 
 function taskHTML(t, cls = "") {
-  const due = fmtDue(t.due);
+  const when = fmtWhen(t);
   const late = isLate(t);
   return `<div class="task ${cls} ${t.done ? "on" : ""}" data-id="${t.id}">
     <div class="box" data-act="toggle"></div>
     <div class="t-body">
       <div class="t-title">${esc(t.title)}</div>
-      ${due ? `<div class="t-meta"><span class="t-due ${late ? "late" : ""}">${late ? "⚠ " : ""}${due}</span></div>` : ""}
+      ${when ? `<div class="t-meta"><span class="t-due ${late ? "late" : ""}">${late ? "⚠ " : ""}${when}</span></div>` : ""}
       ${t.note ? `<div class="t-note">${esc(t.note)}</div>` : ""}
       ${t.why ? `<div class="t-note">${esc(t.why)}</div>` : ""}
     </div>
@@ -306,26 +506,41 @@ function esc(s) {
 
 /* ---------- 交互 ---------- */
 document.getElementById("lists").addEventListener("click", e => {
-  const host = e.target.closest(".task");
+  if (e.target.id === "importSched") { doImport(); return; }
+
+  const host = e.target.closest(".task, .blk");
   if (!host) return;
   const id = host.dataset.id;
-  const act = e.target.dataset.act;
   const inSteps = !!host.closest(".sect")?.querySelector("h2")?.textContent.includes("石子");
   const arr = inSteps ? S.steps : S.tasks;
   const t = arr.find(x => x.id === id);
   if (!t) return;
 
+  if (view === "axis" || e.target.classList.contains("blk")) {
+    t.done = !t.done; t.doneAt = t.done ? Date.now() : null;
+    save(); render(t.done ? id : null);
+    if (t.done) toast("✓ 搞定一件");
+    return;
+  }
+
+  const act = e.target.dataset.act;
   if (act === "toggle") {
-    t.done = !t.done;
-    t.doneAt = t.done ? Date.now() : null;
-    save();
-    render(t.done ? id : null);
+    t.done = !t.done; t.doneAt = t.done ? Date.now() : null;
+    save(); render(t.done ? id : null);
     if (t.done) toast("✓ 搞定一件");
   } else if (act === "del") {
     arr.splice(arr.indexOf(t), 1);
     save(); render();
   }
 });
+
+document.querySelectorAll(".tab").forEach(el =>
+  el.addEventListener("click", () => {
+    document.querySelectorAll(".tab").forEach(x => x.classList.remove("on"));
+    el.classList.add("on");
+    view = el.dataset.view;
+    render();
+  }));
 
 document.getElementById("add").addEventListener("click", () => run("task"));
 document.getElementById("split").addEventListener("click", () => run("split"));
@@ -353,15 +568,18 @@ async function run(mode) {
     if (mode === "task") {
       const out = await askAI(SYS_TASK.replace("{{NOW}}", nowStr()), text);
       const items = (out.tasks || []).filter(t => t && t.title);
-      if (!items.length) throw new Error("没解析出任务，换个说法试试喵");
-      items.forEach(t => S.tasks.push({
-        id: uid(), title: String(t.title).slice(0, 60),
-        due: t.due || "", note: String(t.note || "").slice(0, 120),
-        done: false, createdAt: Date.now(),
-      }));
-      save(); render();
-      inp.value = "";
-      toast(`建好了 ${items.length} 个任务 ✓`);
+      if (!items.length) throw new Error("没解析出日程，换个说法试试喵");
+      items.forEach(t => {
+        let s = t.start || "", e = t.end || "";
+        if (e && s && new Date(e) <= new Date(s)) e = "";
+        S.tasks.push({
+          id: uid(), title: String(t.title).slice(0, 60),
+          start: s, end: e, note: String(t.note || "").slice(0, 120),
+          done: false, createdAt: Date.now(),
+        });
+      });
+      save(); render(); inp.value = "";
+      toast(`建好了 ${items.length} 条 ✓`);
     } else {
       const out = await askAI(SYS_SPLIT.replace("{{NOW}}", nowStr()), text);
       const items = (out.steps || []).filter(s => s && s.title);
@@ -370,8 +588,7 @@ async function run(mode) {
         id: uid(), title: String(s.title).slice(0, 60),
         why: String(s.why || "").slice(0, 120), done: false, createdAt: Date.now(),
       }));
-      save(); render();
-      inp.value = "";
+      save(); render(); inp.value = "";
       toast(`砸成 ${items.length} 颗小石子了 ✓`);
     }
   } catch (err) {

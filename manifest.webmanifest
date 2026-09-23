@@ -1,6 +1,6 @@
 {
-  "name": "多多",
-  "short_name": "多多",
+  "name": "日程管理苏苏崽",
+  "short_name": "日程管理苏苏崽",
   "description": "跟苏苏说一句话，任务就建好了。苏苏也会帮你把大石头砸成小石子。",
   "start_url": "./index.html",
   "scope": "./",

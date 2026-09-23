@@ -1,5 +1,6 @@
-/* 多多 · service worker —— 让 App 断网也能打开 */
-const CACHE = "duoduo-v1";
+/* 日程管理苏苏崽 · service worker —— 让 App 断网也能打开 */
+/* ⚠️ 每次改了 index.html / manifest 都要把版本号 +1，否则手机会一直吃旧缓存 */
+const CACHE = "susu-v2";
 const SHELL = ["./", "./index.html", "./manifest.webmanifest", "./icon-180.png", "./icon-192.png"];
 
 self.addEventListener("install", e => {
